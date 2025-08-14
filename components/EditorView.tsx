@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useProject } from '../contexts/ProjectContext';
 import { useEditor } from '../contexts/EditorContext';
@@ -10,6 +9,7 @@ import FileIcon from './FileIcon';
 import { produce } from 'immer';
 import { useChat } from '../contexts/ChatContext';
 import { useCollaboration } from '../contexts/CollaborationContext';
+import { QuickPreview } from './Preview/QuickPreview';
 
 const NoProjectView: React.FC<{ onNavigateToProjects: () => void }> = ({ onNavigateToProjects }) => (
     <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-bg-inset h-full">
@@ -104,7 +104,7 @@ const EditorView: React.FC<{ onNavigateToProjects: () => void }> = ({ onNavigate
                     </button>
                 ))}
             </div>
-            <div className="relative flex-grow">
+            <div className="relative flex-grow overflow-hidden">
                 {activeFile ? (
                     <>
                         <CodeEditor 
@@ -135,6 +135,7 @@ const EditorView: React.FC<{ onNavigateToProjects: () => void }> = ({ onNavigate
                         <p>Select a file from the explorer to begin editing.</p>
                     </div>
                 )}
+                <QuickPreview />
             </div>
         </div>
     );

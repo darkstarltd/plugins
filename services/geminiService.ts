@@ -1,8 +1,5 @@
-
-
-
 import { GoogleGenAI, Type, GenerateContentResponse, Chat } from "@google/genai";
-import type { CodeError, Platform, Solution, WebViewCode, Project, ProjectHealthAnalysis, Diagnostic, DiagnosticSeverity } from '../types';
+import type { CodeError, Platform, Solution, WebViewCode, Project, ProjectHealthAnalysis, Diagnostic, DiagnosticSeverity, PullRequest } from '../types';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -244,21 +241,19 @@ export const generateDocsForCode = async (platform: Platform, code: string): Pro
     }
 };
 
-export const optimizeCode = async (platform: Platform, code: string): Promise<string> => {
+export const refactorCode = async (code: string, language: string): Promise<string> => {
     const prompt = `
-      You are an expert software architect specializing in code optimization and best practices for ${platform.toUpperCase()}.
+      You are an expert software architect specializing in code optimization and best practices for the ${language} language.
       Your task is to take a piece of code and refactor it for improved performance, readability, and robustness without changing its core functionality.
-
-      **Platform:** ${platform.toUpperCase()}
 
       **Instructions:**
       1.  Analyze the provided code for potential optimizations (e.g., better algorithms, safer patterns, modern language features, functional approaches).
       2.  Rewrite the code to apply these optimizations.
-      3.  Add brief comments explaining the key optimizations you made.
+      3.  Add brief comments ONLY where necessary to explain a non-obvious optimization. Do not over-comment.
       4.  Return the **entire optimized code file**. Respond ONLY with the raw code, no other text or markdown formatting.
 
-      **Code to Optimize:**
-      \`\`\`${platform}
+      **Code to Refactor:**
+      \`\`\`${language}
       ${code}
       \`\`\`
     `;
@@ -268,13 +263,14 @@ export const optimizeCode = async (platform: Platform, code: string): Promise<st
             model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
-                temperature: 0.5,
+                temperature: 0.3,
             }
         });
         return response.text;
     } catch (e) {
-        console.error("Error optimizing code with Gemini:", e);
-        return `/* Error optimizing code. Please check the console for details. \n\n${code} */`;
+        console.error("Error refactoring code with Gemini:", e);
+        // Return original code on error to prevent data loss
+        return `/* Error refactoring code. Please check the console for details. */\n\n${code}`;
     }
 };
 
@@ -485,5 +481,43 @@ export const suggestCommitMessage = async (diffs: string): Promise<string> => {
     } catch (e) {
         console.error("Error suggesting commit message:", e);
         return "chore: update files";
+    }
+};
+
+export const summarizePullRequest = async (pr: PullRequest, diff: string): Promise<string> => {
+    const systemInstruction = `You are Mona, an expert AI code reviewer. Your task is to provide a concise summary of a pull request based on its title, description, and code diff. Format your response in markdown.`;
+
+    const prompt = `
+      Please summarize the following pull request.
+
+      **Title:** ${pr.title}
+      **Author:** ${pr.user.login}
+      **Description:**
+      ${pr.body || 'No description provided.'}
+
+      **Code Diff:**
+      \`\`\`diff
+      ${diff}
+      \`\`\`
+
+      **Instructions:**
+      1.  Provide a one-paragraph summary of the PR's purpose.
+      2.  Create a bulleted list of the key changes.
+      3.  Keep the summary concise and easy to understand.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: {
+                systemInstruction,
+                temperature: 0.4
+            }
+        });
+        return response.text;
+    } catch (e) {
+        console.error("Error summarizing pull request with Gemini:", e);
+        return "Sorry, I was unable to summarize this pull request.";
     }
 };

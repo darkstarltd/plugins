@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import {
-    Bot, Code, LayoutDashboard, Settings as SettingsIcon, ShieldCheck, Puzzle, UserCog, FolderKanban, CreditCard, HardHat
+    Bot, Code, LayoutDashboard, Settings as SettingsIcon, ShieldCheck, Puzzle, UserCog, FolderKanban, CreditCard, HardHat, Eye, WandIcon
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { ChatAssistant } from './components/ChatAssistant';
@@ -31,6 +31,13 @@ import * as storageService from './services/storageService';
 import LiveShareModal from './components/LiveShareModal';
 import { useCollaboration } from './contexts/CollaborationContext';
 import DeployToolchainModal from './components/DeployToolchainModal';
+import { PreviewManager } from './components/Preview/PreviewManager';
+import { LivePreviewBadge } from './components/Preview/LivePreviewBadge';
+import { usePreviewSync } from './hooks/usePreviewSync';
+import { motion, AnimatePresence } from 'framer-motion';
+import AiRefactoringModal from './components/AiRefactoringModal';
+import { useEditor } from './contexts/EditorContext';
+import { useToast } from './components/Toast';
 
 
 // Lazy load views for better performance
@@ -50,10 +57,13 @@ const AppContent: React.FC = () => {
     const { registerCommands, unregisterCommands, isPaletteOpen, togglePalette, commands } = useCommand();
     const { isFirstLogin, clearFirstLogin } = useAuth();
     const { setActiveProject } = useProject();
+    const { activeFileId } = useEditor();
+    const toast = useToast();
     
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
     const [isFirstLoginModalOpen, setIsFirstLoginModalOpen] = useState(false);
     const [isDeployModalOpen, setIsDeployModalOpen] = useState(false);
+    const [isRefactoringModalOpen, setIsRefactoringModalOpen] = useState(false);
     
     const { bottomPanel, bottomPanelHeight, setBottomPanelHeight } = useLayout();
     const [isResizing, setIsResizing] = useState(false);
@@ -61,6 +71,14 @@ const AppContent: React.FC = () => {
     const [isLiveShareModalOpen, setIsLiveShareModalOpen] = useState(false);
     const { startSession } = useCollaboration();
     const { entries: firePassEntries, isLocked: isVaultLocked, setIsUnlockModalOpen } = useFirePass();
+
+    // New Preview Panel State
+    const [previewPanelOpen, setPreviewPanelOpen] = useState(false);
+    const [previewPanelWidth, setPreviewPanelWidth] = useState(500);
+    const [isResizingPreview, setIsResizingPreview] = useState(false);
+
+    // Sync file changes to preview
+    usePreviewSync();
 
     const handleResizeStart = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -80,16 +98,41 @@ const AppContent: React.FC = () => {
         setIsResizing(false);
     }, []);
 
+     const handlePreviewResizeStart = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsResizingPreview(true);
+    };
+
+    const handlePreviewResize = useCallback((e: MouseEvent) => {
+        if (isResizingPreview) {
+            const newWidth = window.innerWidth - e.clientX;
+             if (newWidth >= 300 && newWidth <= window.innerWidth * 0.7) {
+                setPreviewPanelWidth(newWidth);
+            }
+        }
+    }, [isResizingPreview]);
+
+    const handlePreviewResizeEnd = useCallback(() => {
+        setIsResizingPreview(false);
+    }, []);
+
+
     useEffect(() => {
         if (isResizing) {
             window.addEventListener('mousemove', handleResize);
             window.addEventListener('mouseup', handleResizeEnd);
         }
+         if (isResizingPreview) {
+            window.addEventListener('mousemove', handlePreviewResize);
+            window.addEventListener('mouseup', handlePreviewResizeEnd);
+        }
         return () => {
             window.removeEventListener('mousemove', handleResize);
             window.removeEventListener('mouseup', handleResizeEnd);
+            window.removeEventListener('mousemove', handlePreviewResize);
+            window.removeEventListener('mouseup', handlePreviewResizeEnd);
         }
-    }, [isResizing, handleResize, handleResizeEnd]);
+    }, [isResizing, handleResize, handleResizeEnd, isResizingPreview, handlePreviewResize, handlePreviewResizeEnd]);
     
     const navItems = useMemo(() => {
         const baseNav = [
@@ -120,6 +163,10 @@ const AppContent: React.FC = () => {
                 e.preventDefault();
                 togglePalette();
             }
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'e') {
+                e.preventDefault();
+                setPreviewPanelOpen(prev => !prev);
+            }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
@@ -141,12 +188,32 @@ const AppContent: React.FC = () => {
                 section: 'Project',
                 icon: HardHat,
                 action: () => setIsDeployModalOpen(true)
+            },
+            {
+                id: 'toggle-preview',
+                label: 'Toggle Live Preview',
+                section: 'View',
+                icon: Eye,
+                action: () => setPreviewPanelOpen(prev => !prev)
+            },
+            {
+                id: 'mona-refactor',
+                label: 'Mona: Refactor Current File',
+                section: 'AI',
+                icon: WandIcon,
+                action: () => {
+                    if (activeFileId) {
+                        setIsRefactoringModalOpen(true);
+                    } else {
+                        toast.showToast("Open a file to use AI Refactoring.", "info");
+                    }
+                }
             }
         ];
         registerCommands(allCommands);
 
         return () => unregisterCommands(allCommands.map(c => c.id));
-    }, [registerCommands, unregisterCommands, navItems]);
+    }, [registerCommands, unregisterCommands, navItems, activeFileId, toast]);
 
     const navigateToProject = (projectId: string) => {
         setActiveProject(projectId);
@@ -173,23 +240,42 @@ const AppContent: React.FC = () => {
                 <Sidebar onAboutClick={() => setIsAboutModalOpen(true)} />
 
                 <div className="flex-1 flex flex-col overflow-hidden">
-                    <Header onNavigate={setCurrentView} onLiveShareClick={() => setIsLiveShareModalOpen(true)} />
-                    <main className="flex-1 flex flex-col overflow-hidden" style={{ height: bottomPanel ? `calc(100% - ${bottomPanelHeight}px - 64px)` : 'calc(100% - 64px)' }}>
-                        <Suspense fallback={<AppLoadingScreen />}>
-                            {renderView()}
-                        </Suspense>
-                    </main>
-                    {bottomPanel && (
-                         <>
-                            <div
-                                onMouseDown={handleResizeStart}
-                                className="w-full h-2 bg-bg-surface hover:bg-primary/20 cursor-row-resize transition-colors"
-                            />
-                            <div style={{ height: `${bottomPanelHeight}px` }} className="bg-bg-surface border-t border-border-base">
-                                <BottomPanel />
+                    <Header onNavigate={setCurrentView} onLiveShareClick={() => setIsLiveShareModalOpen(true)} onTogglePreview={() => setPreviewPanelOpen(p => !p)} />
+                    <div className="flex-1 flex overflow-hidden">
+                        <main className="flex-1 flex flex-col overflow-hidden" style={{ height: '100%' }}>
+                            <div style={{ height: bottomPanel ? `calc(100% - ${bottomPanelHeight}px)`: '100%' }} className="relative">
+                                <Suspense fallback={<AppLoadingScreen />}>
+                                    {renderView()}
+                                </Suspense>
                             </div>
-                        </>
-                    )}
+                            {bottomPanel && (
+                                <>
+                                    <div
+                                        onMouseDown={handleResizeStart}
+                                        className="w-full h-2 bg-bg-surface hover:bg-primary/20 cursor-row-resize transition-colors"
+                                    />
+                                    <div style={{ height: `${bottomPanelHeight}px` }} className="bg-bg-surface border-t border-border-base">
+                                        <BottomPanel />
+                                    </div>
+                                </>
+                            )}
+                        </main>
+                        <AnimatePresence>
+                        {previewPanelOpen && (
+                             <motion.div
+                                initial={{ width: 0, opacity: 0 }}
+                                animate={{ width: previewPanelWidth, opacity: 1 }}
+                                exit={{ width: 0, opacity: 0 }}
+                                transition={{ duration: 0.3, ease: 'easeInOut' }}
+                                className="flex-shrink-0 relative"
+                                style={{ width: previewPanelWidth }}
+                             >
+                                <div onMouseDown={handlePreviewResizeStart} className="absolute left-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-primary/20 transition-colors z-10" />
+                                <PreviewManager />
+                             </motion.div>
+                        )}
+                        </AnimatePresence>
+                    </div>
                     <StatusBar />
                 </div>
 
@@ -223,6 +309,11 @@ const AppContent: React.FC = () => {
                 isVaultLocked={isVaultLocked}
                 onUnlock={() => setIsUnlockModalOpen(true)}
             />
+             <AiRefactoringModal
+                isOpen={isRefactoringModalOpen}
+                onClose={() => setIsRefactoringModalOpen(false)}
+            />
+            <LivePreviewBadge />
         </>
     );
 };

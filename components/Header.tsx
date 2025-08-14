@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { TerminalSquare, UsersIcon } from 'lucide-react';
+import { TerminalSquare, UsersIcon, Eye } from 'lucide-react';
 import { useCommand } from '../contexts/CommandContext';
 import { AdminLoginModal } from './auth/AdminLoginModal';
 import { useProject } from '../contexts/ProjectContext';
@@ -21,7 +21,7 @@ const Logo: React.FC = () => (
 );
 
 
-export const Header: React.FC<{onNavigate: (view: View) => void; onLiveShareClick: () => void}> = ({onNavigate, onLiveShareClick}) => {
+export const Header: React.FC<{onNavigate: (view: View) => void; onLiveShareClick: () => void; onTogglePreview: () => void;}> = ({onNavigate, onLiveShareClick, onTogglePreview}) => {
     const { togglePalette } = useCommand();
     const [logoClicks, setLogoClicks] = useState(0);
     const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
@@ -81,6 +81,13 @@ export const Header: React.FC<{onNavigate: (view: View) => void; onLiveShareClic
                                 aria-label="Start Live Share session"
                             >
                                 <UsersIcon className="w-5 h-5" />
+                            </button>
+                            <button 
+                                onClick={onTogglePreview}
+                                className="p-2 text-text-muted hover:text-text-base rounded-lg hover:bg-bg-inset transition-colors"
+                                aria-label="Toggle Live Preview"
+                            >
+                                <Eye className="w-5 h-5" />
                             </button>
                             <button 
                                 onClick={togglePalette}

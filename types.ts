@@ -314,20 +314,6 @@ export interface ProjectHealthAnalysis {
   issues: HealthIssue[];
 }
 
-export interface PrFile {
-    path: string;
-    status: 'modified' | 'added' | 'removed';
-    patch?: string;
-}
-
-export interface PrInfo {
-    id: string;
-    title: string;
-    author: string;
-    description: string;
-    files: PrFile[];
-}
-
 export interface Collaborator {
     id: string;
     name: string;
@@ -413,4 +399,43 @@ export interface TextDocument {
 
 export interface DiagnosticProvider {
     provideDiagnostics(document: TextDocument): Promise<Diagnostic[] | undefined>;
+}
+
+// --- GitHub Integration Types ---
+export interface PullRequest {
+  id: number;
+  number: number;
+  title: string;
+  body: string | null;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
+  state: 'open' | 'closed';
+  created_at: string;
+  updated_at: string;
+  html_url: string;
+}
+
+export interface PullRequestFile {
+  sha: string;
+  filename: string;
+  status: 'added' | 'removed' | 'modified' | 'renamed' | 'copied' | 'changed' | 'unchanged';
+  additions: number;
+  deletions: number;
+  changes: number;
+  patch?: string;
+}
+
+export interface GitHubContextType {
+    isConnected: boolean;
+    token: string | null;
+    owner: string | null;
+    repo: string | null;
+    pullRequests: PullRequest[];
+    isLoading: boolean;
+    error: string | null;
+    connect: (token: string, repoUrl: string) => Promise<void>;
+    disconnect: () => void;
+    fetchPullRequestDiff: (prNumber: number) => Promise<string | null>;
 }

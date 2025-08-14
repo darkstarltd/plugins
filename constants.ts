@@ -1,5 +1,6 @@
 
-import type { Platform, CodeError, Solution, User, Project, PrInfo, PrFile, FileSystemNode } from './types';
+
+import type { Platform, CodeError, Solution, User, Project, FileSystemNode } from './types';
 
 export const CODE_TEMPLATES: Record<Platform, string> = {
   web: `function calculateTotal(items) {
@@ -702,63 +703,6 @@ export const MOCK_PROJECTS: Project[] = [
         branches: {
             'develop': MOCK_FILE_SYSTEM
         }
-    }
-];
-
-export const MOCK_PRS: PrInfo[] = [
-    {
-        id: '42',
-        title: 'feat: Add login button and user authentication flow',
-        author: 'alice.j',
-        description: 'This PR introduces a new login button on the homepage and sets up the basic authentication flow using JWT.',
-        files: [
-            {
-                path: 'src/components/Header.tsx',
-                status: 'modified',
-                patch: `--- a/src/components/Header.tsx
-+++ b/src/components/Header.tsx
-@@ -5,6 +5,7 @@
-   return (
-     <header>
-       <h1>My App</h1>
-+      <LoginButton />
-     </header>
-   );
- }`
-            },
-            {
-                path: 'src/components/LoginButton.tsx',
-                status: 'added',
-                patch: `--- /dev/null
-+++ b/src/components/LoginButton.tsx
-@@ -0,0 +1,5 @@
-+const LoginButton = () => {
-+  return <button>Login</button>;
-+};
-+
-+export default LoginButton;`
-            }
-        ]
-    },
-    {
-        id: '39',
-        title: 'fix: Correct calculation for cart total',
-        author: 'bob.w',
-        description: 'Fixes a bug where the cart total was not being calculated correctly when items were removed.',
-        files: [
-            {
-                path: 'src/utils/cart.js',
-                status: 'modified',
-                patch: `--- a/src/utils/cart.js
-+++ b/src/utils/cart.js
-@@ -1,5 +1,5 @@
- function calculateTotal(items) {
--  return items.reduce((acc, item) => acc + item.price, 0);
-+  return items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
- }
- `
-            }
-        ]
     }
 ];
 

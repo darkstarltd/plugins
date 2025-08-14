@@ -13,11 +13,11 @@ import { ChatProvider } from './contexts/ChatContext';
 import { FirePassProvider } from './contexts/FirePassContext';
 import { CollaborationProvider } from './contexts/CollaborationContext';
 import { PluginProvider } from './contexts/PluginContext';
+import { GitHubProvider } from './contexts/GitHubContext';
 
 // Import Plugins
 import gitPlugin from './plugins/git';
 import markdownLinterPlugin from './plugins/markdown-linter';
-import webPreviewPlugin from './plugins/web-preview';
 
 
 const rootElement = document.getElementById('root');
@@ -37,10 +37,12 @@ root.render(
                 <CommandProvider>
                   <ChatProvider>
                     <CollaborationProvider>
-                      <PluginProvider plugins={[gitPlugin, markdownLinterPlugin, webPreviewPlugin]}>
-                        <ToastProvider>
-                          <App />
-                        </ToastProvider>
+                      <PluginProvider plugins={[gitPlugin, markdownLinterPlugin]}>
+                        <GitHubProvider>
+                          <ToastProvider>
+                            <App />
+                          </ToastProvider>
+                        </GitHubProvider>
                       </PluginProvider>
                     </CollaborationProvider>
                   </ChatProvider>
