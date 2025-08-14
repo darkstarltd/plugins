@@ -1,0 +1,6 @@
+{
+  "name": "FireFly IDE",
+  "version": "1.1.0",
+  "description": "An AI-powered IDE by Darkstar Studio that helps developers identify, understand, and fix bugs across multiple platforms (Web, Android, Flutter) using Gemini for intelligent solution generation.",
+  "requestFramePermissions": []
+}

@@ -1,0 +1,52 @@
+{
+  "name": "firefly",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "author": "Darkstar Studio",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx --max-warnings 0",
+    "format": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "lucide-react": "^0.539.0",
+    "@google/genai": "^0.2.1",
+    "react": "^18.3.1",
+    "monaco-editor": "0.45.0",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.4",
+    "zod": "^3.23.8",
+    "framer-motion": "^11.2.13",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.0",
+    "react-markdown": "^9.0.1",
+    "@tanstack/react-query": "^5.51.23",
+    "idb-keyval": "^6.2.1",
+    "workbox-window": "^7.3.0",
+    "vite-plugin-pwa": "^0.20.5",
+    "js-base64": "^3.7.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "eslint": "^9.10.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "prettier": "^3.3.3",
+    "vitest": "^2.0.5",
+    "@vitest/ui": "^2.0.5",
+    "@testing-library/react": "^16.0.1",
+    "@types/testing-library__react": "^12.2.8",
+    "vite-tsconfig-paths": "^5.0.1"
+  }
+}

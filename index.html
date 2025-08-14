@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'; connect-src 'self' https:;">
+    
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 64 64' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M24 8C15.1634 8 8 15.1634 8 24V40C8 48.8366 15.1634 56 24 56H32C45.2548 56 56 45.2548 56 32C56 18.7452 45.2548 8 32 8H24Z' fill='url(%23paint0_linear_1_2)'/%3E%3Cpath d='M48 12L50 16L54 18L50 20L48 24L46 20L42 18L46 16L48 12Z' fill='white'/%3E%3Cdefs%3E%3ClinearGradient id='paint0_linear_1_2' x1='8' y1='8' x2='56' y2='56' gradientUnits='userSpaceOnUse'%3E%3Cstop stop-color='%233b82f6'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FireFly IDE - AI Development Environment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&family=Nunito:wght@700&display=swap" rel="stylesheet">
+    <style id="theme-variables"></style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+              display: ['Nunito', 'sans-serif'],
+            },
+            colors: {
+              'primary': 'var(--color-primary)',
+              'on-primary': 'var(--color-text-on-primary)',
+              'secondary': 'var(--color-secondary)',
+              'on-secondary': 'var(--color-text-on-secondary)',
+              'accent': 'var(--color-accent)',
+              'on-accent': 'var(--color-text-on-accent)',
+              'bg-base': 'var(--color-bg-base)',
+              'bg-surface': 'var(--color-bg-surface)',
+              'bg-inset': 'var(--color-bg-inset)',
+              'text-base': 'var(--color-text-base)',
+              'text-muted': 'var(--color-text-muted)',
+              'text-dim': 'var(--color-text-dim)',
+              'border-base': 'var(--color-border-base)',
+              // Syntax Highlighting Tokens
+              'token-keyword': 'var(--color-token-keyword)',
+              'token-string': 'var(--color-token-string)',
+              'token-comment': 'var(--color-token-comment)',
+              'token-number': 'var(--color-token-number)',
+              'token-operator': 'var(--color-token-operator)',
+              'token-punctuation': 'var(--color-token-punctuation)',
+              'token-function': 'var(--color-token-function)',
+              'token-tag': 'var(--color-token-tag)',
+              'token-attribute': 'var(--color-token-attribute)',
+              'token-value': 'var(--color-token-value)',
+            },
+            animation: {
+                'subtle-pulse': 'subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                'slide-in-right': 'slide-in-right 0.4s ease-out forwards',
+                'slide-in-bottom': 'slide-in-bottom 0.4s ease-out forwards',
+                'slide-out-bottom': 'slide-out-bottom 0.3s ease-in forwards',
+                'scale-in': 'scale-in 0.15s ease-out forwards',
+                'fade-in': 'fade-in 0.15s ease-out forwards',
+                'slide-up-fade': 'slide-up-fade 0.5s ease-out forwards',
+            },
+            keyframes: {
+                'subtle-pulse': {
+                    '0%, 100%': { opacity: 1 },
+                    '50%': { opacity: .7 },
+                },
+                'slide-in-right': {
+                    '0%': { transform: 'translateX(100%)', opacity: 0 },
+                    '100%': { transform: 'translateX(0)', opacity: 1 },
+                },
+                'slide-in-bottom': {
+                    '0%': { transform: 'translateY(100%)', opacity: 0 },
+                    '100%': { transform: 'translateY(0)', opacity: 1 },
+                },
+                'slide-out-bottom': {
+                    '0%': { transform: 'translateY(0)', opacity: 1 },
+                    '100%': { transform: 'translateY(100%)', opacity: 0 },
+                },
+                'scale-in': {
+                    '0%': { transform: 'scale(0.95)', opacity: '0' },
+                    '100%': { transform: 'scale(1)', opacity: '1' },
+                },
+                'fade-in': {
+                    '0%': { opacity: '0' },
+                    '100%': { opacity: '1' },
+                },
+                'slide-up-fade': {
+                  '0%': { opacity: '0', transform: 'translateY(10px)' },
+                  '100%': { opacity: '1', transform: 'translateY(0)' },
+                },
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      .custom-tooltip {
+          visibility: hidden;
+          opacity: 0;
+          transition: opacity 0.2s 0.1s, visibility 0.2s 0.1s;
+      }
+      .group:hover .custom-tooltip {
+          visibility: visible;
+          opacity: 1;
+      }
+      body {
+        background-color: var(--color-bg-base);
+        color: var(--color-text-base);
+      }
+       /* Accessibility: Reduce Motion */
+      [data-reduce-motion="true"] * {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
+      }
+       /* Accessibility: High Contrast */
+      [data-theme-contrast="true"] body {
+        --color-bg-base: #000000;
+        --color-bg-surface: #111111;
+        --color-bg-inset: #222222;
+        --color-text-base: #ffffff;
+        --color-text-muted: #eeeeee;
+        --color-text-dim: #bbbbbb;
+        --color-border-base: #666666;
+      }
+      [data-theme-contrast="true"] .border-border-base {
+          border-color: #888888;
+      }
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border-width: 0;
+      }
+      #root, body, html {
+        height: 100vh;
+        width: 100vw;
+        overflow: hidden;
+      }
+      
+      /* Aurora Background */
+      @keyframes aurora-1 { 0% { transform: translate(-50%, -50%) rotate(0deg) scale(1.2); opacity: 0.6; } 50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.5); opacity: 0.4; } 100% { transform: translate(-50%, -50%) rotate(360deg) scale(1.2); opacity: 0.6; } }
+      @keyframes aurora-2 { 0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); opacity: 0.5; } 50% { transform: translate(-50%, -50%) rotate(-180deg) scale(1.2); opacity: 0.3; } 100% { transform: translate(-50%, -50%) rotate(-360deg) scale(1); opacity: 0.5; } }
+      @keyframes aurora-3 { 0% { transform: translate(-50%, -50%) rotate(0deg) scale(1.2); opacity: 0.3; } 50% { transform: translate(-50%, -50%) rotate(90deg) scale(1); opacity: 0.5; } 100% { transform: translate(-50%, -50%) rotate(180deg) scale(1.2); opacity: 0.3; } }
+      .aurora-1, .aurora-2, .aurora-3 {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          mix-blend-mode: screen;
+      }
+      .aurora-1 {
+          width: 800px; height: 800px; left: 20%; top: 30%;
+          background: radial-gradient(circle, var(--color-primary), transparent 60%);
+          animation: aurora-1 25s infinite linear;
+      }
+      .aurora-2 {
+          width: 600px; height: 600px; left: 80%; top: 60%;
+          background: radial-gradient(circle, var(--color-accent), transparent 60%);
+          animation: aurora-2 30s infinite linear;
+      }
+      .aurora-3 {
+          width: 500px; height: 500px; left: 50%; top: 90%;
+          background: radial-gradient(circle, var(--color-secondary), transparent 70%);
+          animation: aurora-3 20s infinite linear;
+      }
+
+      /* Glassmorphism utility */
+      .bg-glass {
+          background-color: rgba(31, 41, 55, 0.5) !important; /* bg-gray-800/50 */
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+    </style>
+<link rel="stylesheet" href="/index.css">
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.1.1",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
+    "react/": "https://esm.sh/react@^19.1.1/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.13.0",
+    "immer": "https://esm.sh/immer@^10.1.1",
+    "marked": "https://esm.sh/marked@^16.1.2",
+    "lucide-react": "https://esm.sh/lucide-react@^0.539.0",
+    "vite-plugin-pwa": "https://esm.sh/vite-plugin-pwa@^1.0.2",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.0.0",
+    "vite": "https://esm.sh/vite@^7.1.2"
+  }
+}
+</script>
+</head>
+<body class="bg-bg-base font-sans">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>
