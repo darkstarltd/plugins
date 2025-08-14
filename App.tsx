@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import {
-    Bot, Code, LayoutDashboard, Settings as SettingsIcon, ShieldCheck, Puzzle, UserCog, FolderKanban, CreditCard, HardHat, Eye, WandIcon
+    Bot, Code, LayoutDashboard, Settings as SettingsIcon, ShieldCheck, Puzzle, UserCog, FolderKanban, CreditCard, HardHat, Eye, WandIcon, BugIcon
 } from 'lucide-react';
 import { Header } from './components/Header';
 import { ChatAssistant } from './components/ChatAssistant';
@@ -38,6 +38,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import AiRefactoringModal from './components/AiRefactoringModal';
 import { useEditor } from './contexts/EditorContext';
 import { useToast } from './components/Toast';
+import { useDebugger } from './contexts/DebuggerContext';
 
 
 // Lazy load views for better performance
@@ -57,8 +58,9 @@ const AppContent: React.FC = () => {
     const { registerCommands, unregisterCommands, isPaletteOpen, togglePalette, commands } = useCommand();
     const { isFirstLogin, clearFirstLogin } = useAuth();
     const { setActiveProject } = useProject();
-    const { activeFileId } = useEditor();
+    const { activeFileId, getFileNode } = useEditor();
     const toast = useToast();
+    const { startDebugging } = useDebugger();
     
     const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
     const [isFirstLoginModalOpen, setIsFirstLoginModalOpen] = useState(false);
@@ -208,12 +210,26 @@ const AppContent: React.FC = () => {
                         toast.showToast("Open a file to use AI Refactoring.", "info");
                     }
                 }
+            },
+            {
+                id: 'start-debugging',
+                label: 'Start Debugging',
+                section: 'Debug',
+                icon: BugIcon,
+                action: () => {
+                    const activeFile = getFileNode(activeFileId || '');
+                    if (activeFile && activeFile.content) {
+                        startDebugging(activeFile.id, activeFile.content);
+                    } else {
+                        toast.showToast("Open a file to start debugging.", "info");
+                    }
+                }
             }
         ];
         registerCommands(allCommands);
 
         return () => unregisterCommands(allCommands.map(c => c.id));
-    }, [registerCommands, unregisterCommands, navItems, activeFileId, toast]);
+    }, [registerCommands, unregisterCommands, navItems, activeFileId, toast, getFileNode, startDebugging]);
 
     const navigateToProject = (projectId: string) => {
         setActiveProject(projectId);

@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Collaborator, Diagnostic } from '../types';
 import Minimap from './Minimap';
@@ -11,6 +5,8 @@ import ContextMenu, { ContextMenuItem } from './ContextMenu';
 import { MonaIcon, LightbulbIcon } from './icons';
 import { useSettings } from '../contexts/SettingsContext';
 import * as geminiService from '../services/geminiService';
+import { useDebugger } from '../contexts/DebuggerContext';
+import { useEditor } from '../contexts/EditorContext';
 
 const findMatchingBracket = (code: string, position: number, openChar: string, closeChar: string): number | null => {
     const text = code;
@@ -122,6 +118,8 @@ interface CodeEditorProps {
 const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, onCursorChange, searchResults, activeSearchIndex, collaborators, diagnostics, onExplainCode, onApplyFix }) => {
     const { settings } = useSettings();
     const { editor: editorSettings } = settings;
+    const { activeFileId } = useEditor();
+    const { session: debuggerSession, breakpoints, toggleBreakpoint } = useDebugger();
     const [scrollTop, setScrollTop] = useState(0);
     const [bracketPair, setBracketPair] = useState<[number, number] | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -313,6 +311,16 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, onCursorCha
             )
         })
     };
+    
+    const activeBreakpoints = useMemo(() => {
+        const fileBreakpointsLines = breakpoints
+            .filter(bp => bp.fileId === activeFileId)
+            .map(bp => bp.line);
+        return new Set(fileBreakpointsLines);
+    }, [breakpoints, activeFileId]);
+
+    const isExecutionLine = debuggerSession.status === 'paused' && debuggerSession.currentFrame?.fileId === activeFileId;
+    const executionLineNumber = debuggerSession.currentFrame?.line;
 
     return (
         <div className="editor-container text-base h-full" ref={containerRef}>
@@ -322,11 +330,13 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, onCursorCha
                     const lineNum = i + 1;
                     const diagsOnLine = diagnosticsByLine.get(lineNum);
                     const quickFixDiag = diagsOnLine?.find(d => d.quickFixTitle && d.replacementCode);
+                    const hasBreakpoint = activeBreakpoints.has(lineNum);
 
                     return (
-                        <div key={i} className={`relative px-4 text-right ${lineNum === currentLine ? 'text-[var(--color-text-bright)]' : ''}`}>
+                        <div key={i} className={`relative px-4 text-right cursor-pointer group ${lineNum === currentLine ? 'text-[var(--color-text-bright)]' : ''}`} onClick={() => toggleBreakpoint(activeFileId || '', lineNum)}>
+                            <div className={`absolute left-1.5 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full transition-colors ${hasBreakpoint ? 'bg-red-500' : 'bg-transparent group-hover:bg-red-500/30'}`} />
                             {quickFixDiag ? (
-                                <button onClick={(e) => showQuickFixMenu(e, quickFixDiag)} className="absolute left-0 top-1/2 -translate-y-1/2 text-yellow-400 hover:text-yellow-300">
+                                <button onClick={(e) => showQuickFixMenu(e, quickFixDiag)} className="absolute left-4 top-1/2 -translate-y-1/2 text-yellow-400 hover:text-yellow-300">
                                     <LightbulbIcon className="w-4 h-4" />
                                 </button>
                             ) : null}
@@ -355,9 +365,15 @@ const CodeEditor: React.FC<CodeEditorProps> = ({ code, onCodeChange, onCursorCha
                 />
                  <pre className="absolute inset-0 p-4 whitespace-pre-wrap overflow-hidden pointer-events-none z-0" aria-hidden="true" style={editorStyle}>
                     <div 
-                        className="absolute left-0 w-full bg-[var(--color-bg-tertiary)] opacity-50 transition-transform duration-75"
+                        className={`absolute left-0 w-full bg-[var(--color-bg-tertiary)] opacity-50 transition-transform duration-75 ${isExecutionLine && executionLineNumber === currentLine ? '!bg-yellow-500/20' : ''}`}
                         style={{ height: `${lineHeightPx}px`, transform: `translateY(${(currentLine - 1) * lineHeightPx}px)` }}
                     ></div>
+                    {isExecutionLine && (
+                        <div 
+                            className="absolute left-0 w-full bg-yellow-500/20"
+                            style={{ height: `${lineHeightPx}px`, transform: `translateY(${(executionLineNumber - 1) * lineHeightPx}px)` }}
+                        ></div>
+                    )}
                     <code dangerouslySetInnerHTML={{ __html: highlightedCode }} />
                     {ghostText && textareaRef.current && (
                         <span className="absolute opacity-40 italic" style={{

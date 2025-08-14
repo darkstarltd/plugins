@@ -14,6 +14,7 @@ import { FirePassProvider } from './contexts/FirePassContext';
 import { CollaborationProvider } from './contexts/CollaborationContext';
 import { PluginProvider } from './contexts/PluginContext';
 import { GitHubProvider } from './contexts/GitHubContext';
+import { DebuggerProvider } from './contexts/DebuggerContext';
 
 // Import Plugins
 import gitPlugin from './plugins/git';
@@ -39,9 +40,11 @@ root.render(
                     <CollaborationProvider>
                       <PluginProvider plugins={[gitPlugin, markdownLinterPlugin]}>
                         <GitHubProvider>
-                          <ToastProvider>
-                            <App />
-                          </ToastProvider>
+                          <DebuggerProvider>
+                            <ToastProvider>
+                              <App />
+                            </ToastProvider>
+                          </DebuggerProvider>
                         </GitHubProvider>
                       </PluginProvider>
                     </CollaborationProvider>

@@ -2,27 +2,6 @@ import { ReactNode } from "react";
 
 export type Platform = 'web' | 'android' | 'flutter';
 
-export type ErrorSeverity = 'error' | 'warning' | 'info';
-
-export type ErrorType = 'runtime' | 'syntax' | 'logical' | 'design' | 'null-safety' | 'deprecation' | 'performance';
-
-export interface CodeError {
-  id: number;
-  line: number;
-  column: number;
-  message: string;
-  severity: ErrorSeverity;
-  type: ErrorType;
-  code: string;
-}
-
-export interface Solution {
-  title: string;
-  description: string;
-  fixedCode: string;
-  confidence: number;
-}
-
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
@@ -438,4 +417,64 @@ export interface GitHubContextType {
     connect: (token: string, repoUrl: string) => Promise<void>;
     disconnect: () => void;
     fetchPullRequestDiff: (prNumber: number) => Promise<string | null>;
+}
+
+// --- Debugger Types ---
+export interface Breakpoint {
+    fileId: string;
+    line: number;
+}
+
+export interface Variable {
+    name: string;
+    type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'function' | 'undefined';
+    value: string;
+}
+
+export interface Scope {
+    name: 'Local' | 'Global' | 'Closure';
+    variables: Variable[];
+}
+
+export interface StackFrame {
+    id: string;
+    functionName: string;
+    fileId: string;
+    fileName: string;
+    line: number;
+}
+
+export interface DebuggerSession {
+    status: 'running' | 'paused' | 'inactive';
+    currentFrame: StackFrame | null;
+    callStack: StackFrame[];
+    scopes: Scope[];
+}
+
+export interface DebuggerContextType {
+    session: DebuggerSession;
+    breakpoints: Breakpoint[];
+    toggleBreakpoint: (fileId: string, line: number) => void;
+    startDebugging: (fileId: string, code: string) => void;
+    stopDebugging: () => void;
+    continueDebug: () => void;
+    stepOver: () => void;
+}
+
+// Added missing types
+export interface CodeError {
+  id: number;
+  line: number;
+  column: number;
+  message: string;
+  severity: "error" | "warning" | "info";
+  type: string;
+  code: string;
+}
+
+export interface Solution {
+    title: string;
+    description: string;
+    fixedCode: string;
+    confidence: number;
 }
